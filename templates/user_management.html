@@ -1,7 +1,94 @@
-{% extends 'layout.html' %}
+{% extends 'layout.html' %} {% block title %}User Management{% endblock %} {%
+block content %}
+<div class="container">
+  <h2>User Management</h2>
+  {% if users %}
+  <table class="table table-striped">
+    <thead class="thead-dark">
+      <tr>
+        <th>User ID</th>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>First Name</th>
+        <th>Last Name</th>
+        <th>Phone Number</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for user in users %}
+      <tr>
+        <td>{{ user.user_id }}</td>
+        <td>{{ user.name }}</td>
+        <td>{{ user.email }}</td>
+        <td>{{ user.role }}</td>
+        <td
+          class="editable"
+          contenteditable="true"
+          data-field="first_name"
+          data-id="{{ user.id }}"
+        >
+          {{ user.first_name }}
+        </td>
+        <td
+          class="editable"
+          contenteditable="true"
+          data-field="last_name"
+          data-id="{{ user.id }}"
+        >
+          {{ user.last_name }}
+        </td>
+        <td
+          class="editable"
+          contenteditable="true"
+          data-field="phone_number"
+          data-id="{{ user.phone_number }}"
+        >
+          {{ user.phone_number }}
+        </td>
+        <td>
+          <button type="button" class="btn btn-primary btn-sm update-btn">
+            Update
+          </button>
+          <form
+            action="{{ url_for('delete_user', user_id=user.user_id) }}"
+            method="POST"
+            style="display: inline"
+          >
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p>No users found.</p>
+  {% endif %}
+</div>
 
-{% block title %}Profile{% endblock %}
-
-{% block content %}
-<h2>User Management</h2>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  $(document).ready(function () {
+    $(".update-btn").click(function () {
+      var row = $(this).closest("tr");
+      var userId = row.find("td:first").text().trim() ;
+      var firstName = row.find('td[data-field="first_name"]').text().trim() ;
+      var lastName = row.find('td[data-field="last_name"]').text().trim() ;
+      var phone_number = row.find('td[data-field="phone_number"]').text().trim() ;
+      $.ajax({
+        type: "POST",
+        url: "/update_user",
+        data: { id: userId, first_name: firstName, last_name: lastName, phone_number: phone_number },
+        success: function (response) {
+          alert('successful')
+        },
+        error: function (xhr, status, error) {
+          alert('failed')
+        },
+      });
+    });
+  });
+</script>
 {% endblock %}

@@ -16,14 +16,19 @@
     <nav class="navtop">
       <div>
         <h1>Login Example</h1>
-        {% if userrole %} {% if userrole == 2 %}
-        <a href="{{ url_for('user_management') }}"
-          ><i class="fas fa-home"></i>User Management</a
-        >
-        <a href="{{ url_for('guide_management') }}"
-          ><i class="fas fa-home"></i>Guide Management</a
-        >
-        {% endif %} {% endif %}
+        {% if userrole %}
+          {% if userrole > 1 %}
+            <a href="{{ url_for('user_management') }}"
+              ><i class="fas fa-home"></i>User Management</a
+            >
+          {% endif %}
+
+          {% if userrole > 2 %}
+            <a href="{{ url_for('guide_management') }}"
+              ><i class="fas fa-home"></i>Guide Management</a
+            >
+          {% endif %}
+        {% endif %}
         <a href="{{ url_for('home') }}"><i class="fas fa-home"></i>Home</a>
         <a href="{{ url_for('profile') }}"
           ><i class="fas fa-user-circle"></i>Profile</a
@@ -36,3 +41,4 @@
     <div class="content">{% block content %}{% endblock %}</div>
   </body>
 </html>
+

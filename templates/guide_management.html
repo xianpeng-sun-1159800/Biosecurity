@@ -1,4 +1,126 @@
-{% extends 'layout.html' %} {% block title %}Profile{% endblock %} {% block
-content %}
-<h2>Guide Management</h2>
+{% extends 'layout.html' %}
+
+{% block title %}Guide Management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Guide Management</h2>
+    {% if guides %}
+        {% for guide in guides %}
+        <div class="card guide">
+            <img src="/static/{{ guide.primary_image }}" class="card-img-top" alt="{{ guide.common_name }}">
+            <div class="card-body">
+                <h5 class="editable" contenteditable="true" data-name="common_name">{{ guide.common_name }}</h5>
+                <p class="editable" contenteditable="true" data-name="scientific_name">{{ guide.scientific_name }}</p>
+                <p class="editable" contenteditable="true" data-name="key_characteristics">{{ guide.key_characteristics }}</p>
+                <p class="editable" contenteditable="true" data-name="biology_description">{{ guide.biology_description }}</p>
+                <p class="editable" contenteditable="true" data-name="symptoms">{{ guide.symptoms }}</p>
+                <button class="btn btn-primary save-btn" data-id="{{ guide.horticulture_id }}">Save Changes</button>
+                <button class="btn btn-danger delete-btn" data-id="{{ guide.horticulture_id }}">Delete</button>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>No guides found.</p>
+    {% endif %}
+   <div class="card guide">
+        <div class="card-body">
+            <form id="create-guide-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="common_name">Common Name:</label>
+                    <input type="text" class="form-control" id="common_name" name="common_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="scientific_name">Scientific Name:</label>
+                    <input type="text" class="form-control" id="scientific_name" name="scientific_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="key_characteristics">Key Characteristics:</label>
+                    <textarea class="form-control" id="key_characteristics" name="key_characteristics" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="biology_description">Biology Description:</label>
+                    <textarea class="form-control" id="biology_description" name="biology_description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="symptoms">Symptoms:</label>
+                    <textarea class="form-control" id="symptoms" name="symptoms" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="primary_image">Primary Image:</label>
+                    <input type="file" class="form-control-file" id="primary_image" name="primary_image" accept="image/*" required>
+                </div>
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary">Create Guide</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const saveButtons = document.querySelectorAll('.save-btn');
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+
+    saveButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const guideId = this.getAttribute('data-id');
+            const guideDiv = this.parentElement.querySelectorAll('.editable');
+
+            // Extract the edited data from the editable divs
+            const data = {};
+            guideDiv.forEach(div => {
+                data[div.getAttribute('data-name')] = div.innerText;
+            });
+
+            // Send the edited data to the server for saving
+            fetch(`/guides/edit/${guideId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            }).then(response => {
+                // Handle response if needed
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    });
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const guideId = this.getAttribute('data-id');
+
+            if (confirm('Are you sure you want to delete this guide?')) {
+                // Send request to server to delete the guide
+                fetch(`/guides/delete/${guideId}`, {
+                    method: 'POST'
+                }).then(response => {
+                    window.location.reload();
+
+                }).catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+        });
+    });
+
+    const createGuideForm = document.getElementById('create-guide-form');
+
+    createGuideForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const formData = new FormData(this);
+
+        fetch('/guides/create', {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            window.location.reload();
+        })
+    });
+});
+</script>
 {% endblock %}
