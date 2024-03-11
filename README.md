@@ -10,15 +10,15 @@
 
 **staff Account**
 
-**User ID for testing: **
+**User ID for testing: 9@qq.com**
 
-**Password: **
+**Password: Adamantxp001**
 
 **Admin Account**
 
-**User ID for testing: **
+**User ID for testing: 8@qq.com**
 
-**Password: **
+**Password: Adamantxp001**
 
 
 **Pathonanywhere URL**
