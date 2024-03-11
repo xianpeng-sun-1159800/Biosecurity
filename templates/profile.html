@@ -6,19 +6,62 @@
 <h2>Profile Page</h2>
 <div>
     <p>Your account details are below:</p>
-    <table>
-        <tr>
-            <td>Username:</td>
-            <td>{{ account['name'] }}</td>
-        </tr>
-        <tr>
-            <td>Password:</td>
-            <td>{{ account['password'] }}</td>
-        </tr>
-        <tr>
-            <td>Email:</td>
-            <td>{{ account['email'] }}</td>
-        </tr>
-    </table>
+    <div class="form-group">
+        <label for="username" class="label">Username:</label>
+        <div id="username" class="editable">{{ account.username }}</div>
+    </div>
+    <div class="form-group">
+        <label for="password" class="label">Password:</label>
+        <div id="password" class="editable" contenteditable>******</div>
+    </div>
+    <div class="form-group">
+        <label for="first_name" class="label">First Name:</label>
+        <div id="first_name" class="editable" contenteditable>{{ account.first_name | default('')}}</div>
+    </div>
+    <div class="form-group">
+        <label for="last_name" class="label">Last Name:</label>
+        <div id="last_name" class="editable" contenteditable>{{ account.last_name | default('') }}</div>
+    </div>
+    <div class="form-group">
+        <label for="email" class="label">Email:</label>
+        <div id="email" class="editable">{{ account.email }}</div>
+    </div>
 </div>
+<button onclick="saveChanges()">Save Changes</button>
+
+<script>
+    function saveChanges() {
+        const password = document.getElementById('password').innerText;
+        const first_name = document.getElementById('first_name').innerText;
+        const last_name = document.getElementById('last_name').innerText;
+        const email = document.getElementById('email').innerText;
+
+        // Send the updated data to the server using Fetch API
+        fetch('/profile/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ password: password, first_name: first_name, last_name: last_name, email: email })
+        }).then(response => {
+            // Handle response if needed
+            console.log('Changes saved successfully');
+        }).catch(error => {
+            console.error('Error:', error);
+        });
+    }
+</script>
+
+<style>
+    .form-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .form-group .label {
+        width: 100px; /* Adjust width as needed */
+        margin-right: 10px; /* Adjust spacing between label and editable content */
+    }
+</style>
 {% endblock %}

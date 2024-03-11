@@ -15,17 +15,27 @@
   <body class="loggedin">
     <nav class="navtop">
       <div>
-        <h1>Login Example</h1>
+
         {% if userrole %}
+          {% if userrole == 1 %}
+            <h1>Hi Horticulturalists</h1>
+          {% elif userrole == 2 %}
+            <h1>Hi Staff</h1>
+          {% elif userrole == 3 %}
+            <h1>Hi admin</h1>
+          {% endif %}
           {% if userrole > 1 %}
             <a href="{{ url_for('user_management') }}"
-              ><i class="fas fa-home"></i>User Management</a
+              ><i class="fas fa-home"></i>Users</a
+            >
+            <a href="{{ url_for('guide_management') }}"
+              ><i class="fas fa-home"></i>Guides</a
             >
           {% endif %}
 
           {% if userrole > 2 %}
-            <a href="{{ url_for('guide_management') }}"
-              ><i class="fas fa-home"></i>Guide Management</a
+            <a href="{{ url_for('staff_management') }}"
+              ><i class="fas fa-home"></i>Staffs</a
             >
           {% endif %}
         {% endif %}

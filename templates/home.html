@@ -5,4 +5,20 @@
 {% block content %}
 <h2>User Landing Page</h2>
 <p>Welcome back, {{ username }}!</p>
+
+{% if guides %}
+    {% for guide in guides %}
+    <div class="card guide">
+        <img src="/static/{{ guide.primary_image }}" class="card-img-top" alt="{{ guide.common_name }}">
+        <div class="card-body">
+            <h5 contenteditable="true" data-name="common_name">{{ guide.common_name }}</h5>
+            <p contenteditable="true" data-name="scientific_name">{{ guide.scientific_name }}</p>
+            <p contenteditable="true" data-name="key_characteristics">{{ guide.key_characteristics }}</p>
+            <p contenteditable="true" data-name="biology_description">{{ guide.biology_description }}</p>
+            <p contenteditable="true" data-name="symptoms">{{ guide.symptoms }}</p>
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}
+
 {% endblock %}

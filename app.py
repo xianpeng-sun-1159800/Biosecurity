@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 from flask import render_template
 from flask import request
@@ -8,6 +10,8 @@ import re
 from datetime import datetime
 import mysql.connector
 from mysql.connector import FieldType
+from werkzeug.utils import secure_filename
+
 import connect
 from flask_hashing import Hashing
 
@@ -28,39 +32,27 @@ def getDictCursor():
     dbconn = connection.cursor(dictionary=True)
     return dbconn
 
-# http://localhost:5000/login/ - this will be the login page, we need to use both GET and POST requests
 @app.route('/login/', methods=['GET', 'POST'])
 def login():
-    # Output message if something goes wrong...
     msg = ''
-    # Check if "username" and "password" POST requests exist (user submitted form)
     if request.method == 'POST' and 'username' in request.form and 'password' in request.form:
-        # Create variables for easy access
         username = request.form['username']
         user_password = request.form['password']
-        # Check if account exists using MySQL
         cursor = getDictCursor()
         cursor.execute('SELECT * FROM user WHERE name = %s', (username,))
-        # Fetch one record and return result
         account = cursor.fetchone()
         if account is not None:
             password = account["password"]
             if hashing.check_value(password, user_password, salt='abcd'):
-            # If account exists in accounts table 
-            # Create session data, we can access this data in other routes
                 session['loggedin'] = True
                 session['id'] = account['user_id']
                 session['username'] = account['name']
                 session['userrole'] = account['role']
-                # Redirect to home page
                 return redirect(url_for('home'))
             else:
-                #password incorrect
                 msg = 'Incorrect password!'
         else:
-            # Account doesnt exist or username incorrect
             msg = 'Incorrect username'
-    # Show the login form with message (if any)
     return render_template('index.html', msg=msg)
 
 @app.route('/')
@@ -108,10 +100,10 @@ def register():
 def home():
     # Check if user is loggedin
     if 'loggedin' in session:
-        # user = db.query("select * from user")
-        # return render_template('home.html', user=user)
-        return render_template('home.html', username=session['username'], userrole=session['userrole'])
-    # User is not loggedin redirect to login page
+        cursor = getDictCursor()
+        cursor.execute('SELECT * FROM guide')
+        guides = cursor.fetchall()
+        return render_template('home.html', username=session['username'], userrole=session['userrole'], guides=guides)
     return redirect(url_for('login'))
 
 # http://localhost:5000/profile - this will be the profile page, only accessible for loggedin users
@@ -182,14 +174,18 @@ def guide_management():
             return redirect(url_for('home'))
     return redirect(url_for('login'))
 
+# Define a route to handle the deletion of a guide with a specified ID through a POST request
 @app.route('/guides/delete/<int:guide_id>', methods=['POST'])
 def delete_guide(guide_id):
+    # Get a database cursor object
     cursor = getDictCursor()
-    # Delete the guide from the database
+    # SQL query statement to delete guide information related to the specified horticulture_id
     sql = "DELETE FROM guide WHERE horticulture_id=%s"
+    # Execute the SQL query, using a placeholder to insert the guide_id into the SQL statement
     cursor.execute(sql, (guide_id,))
-
+    # Return a message indicating successful deletion to the client
     return "Guide deleted successfully"
+
 
 @app.route('/guides/edit/<int:horticulture_id>', methods=['POST'])
 def edit_guide(horticulture_id):
@@ -208,8 +204,14 @@ def edit_guide(horticulture_id):
 @app.route('/delete_user/<int:user_id>', methods=['POST'])
 def delete_user(user_id):
     cursor = getDictCursor()
+    sql = "SELECT * FROM user WHERE user_id = %s" % user_id
+    cursor.execute(sql)
+    user = cursor.fetchone()
     cursor.execute("DELETE FROM user WHERE user_id=%s", (user_id,))
-    return redirect(url_for('user_management'))
+    if user["role"] == 2:
+        return redirect(url_for('staff_management'))
+    else:
+        return redirect(url_for('user_management'))
 
 # Route for updating a user
 @app.route('/update_user', methods=['POST'])
@@ -222,6 +224,51 @@ def update_user():
         cursor = getDictCursor()
         sql = "UPDATE user SET first_name='%s', last_name='%s', phone_number='%s' WHERE user_id=%s" % (first_name, last_name, phone_number, user_id)
         cursor.execute(sql)
+        return 'User information updated successfully!', 200  # Return success response
+    return 'Error updating user information', 500  # Return error response
+
+
+app.config['UPLOAD_FOLDER'] = 'static'
+@app.route('/guides/create', methods=['POST'])
+def create_guide():
+    data = request.form
+    primary_image = request.files['primary_image']  # Get the uploaded image file
+
+    try:
+        if primary_image:
+            primary_image.save(os.path.join(app.config['UPLOAD_FOLDER'], primary_image.filename))
+            primary_image_path = primary_image.filename
+        else:
+            primary_image_path = None
+
+        cursor = getDictCursor()
+        sql = "INSERT INTO guide (horticulture_item_type, present_in_NZ, common_name, scientific_name, key_characteristics, biology_description, symptoms, primary_image) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        cursor.execute(sql, (
+            "pest", "yes", data['common_name'], data['scientific_name'],
+            data['key_characteristics'], data['biology_description'], data['symptoms'], primary_image_path))
+    except Exception as e:
+        print(e)
+
+    return redirect(url_for('guide_management'))
+
+@app.route('/profile/update', methods=['POST'])
+def update_profile():
+    if request.method == 'POST':
+        cursor = getDictCursor()
+
+        data = request.get_json()
+        first_name = data['first_name']
+        last_name = data['last_name']
+        email = data['email']
+
+        password = data['password']
+        if password != "******":
+            hashed = hashing.hash_value(password, salt='abcd')
+            sql = "UPDATE user SET password=%s, first_name=%s, last_name=%s WHERE email=%s"
+            cursor.execute(sql, (hashed, first_name, last_name, email))
+        else:
+            sql = "UPDATE user SET first_name=%s, last_name=%s WHERE email=%s"
+            cursor.execute(sql, (first_name, last_name, email))
         return 'User information updated successfully!', 200  # Return success response
     return 'Error updating user information', 500  # Return error response
 
