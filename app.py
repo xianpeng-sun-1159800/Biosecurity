@@ -95,10 +95,9 @@ def register():
     # Show registration form with message (if any)
     return render_template('register.html', msg=msg)
 
-# http://localhost:5000/home - this will be the home page, only accessible for loggedin users
+
 @app.route('/home')
 def home():
-    # Check if user is loggedin
     if 'loggedin' in session:
         cursor = getDictCursor()
         cursor.execute('SELECT * FROM guide')
@@ -174,17 +173,13 @@ def guide_management():
             return redirect(url_for('home'))
     return redirect(url_for('login'))
 
-# Define a route to handle the deletion of a guide with a specified ID through a POST request
+
 @app.route('/guides/delete/<int:guide_id>', methods=['POST'])
 def delete_guide(guide_id):
-    # Get a database cursor object
     cursor = getDictCursor()
-    # SQL query statement to delete guide information related to the specified horticulture_id
     sql = "DELETE FROM guide WHERE horticulture_id=%s"
-    # Execute the SQL query, using a placeholder to insert the guide_id into the SQL statement
     cursor.execute(sql, (guide_id,))
-    # Return a message indicating successful deletion to the client
-    return "Guide deleted successfully"
+    return "successfully"
 
 
 @app.route('/guides/edit/<int:horticulture_id>', methods=['POST'])
@@ -200,7 +195,6 @@ def edit_guide(horticulture_id):
 
 
 
-# Route for deleting a user
 @app.route('/delete_user/<int:user_id>', methods=['POST'])
 def delete_user(user_id):
     cursor = getDictCursor()
@@ -213,7 +207,7 @@ def delete_user(user_id):
     else:
         return redirect(url_for('user_management'))
 
-# Route for updating a user
+
 @app.route('/update_user', methods=['POST'])
 def update_user():
     if request.method == 'POST':
@@ -224,15 +218,15 @@ def update_user():
         cursor = getDictCursor()
         sql = "UPDATE user SET first_name='%s', last_name='%s', phone_number='%s' WHERE user_id=%s" % (first_name, last_name, phone_number, user_id)
         cursor.execute(sql)
-        return 'User information updated successfully!', 200  # Return success response
-    return 'Error updating user information', 500  # Return error response
+        return 'User information has been successfully updated!', 200
+    return 'Failed to update user information.', 500
 
 
 app.config['UPLOAD_FOLDER'] = 'static'
 @app.route('/guides/create', methods=['POST'])
 def create_guide():
     data = request.form
-    primary_image = request.files['primary_image']  # Get the uploaded image file
+    primary_image = request.files['primary_image']
 
     try:
         if primary_image:
@@ -269,8 +263,8 @@ def update_profile():
         else:
             sql = "UPDATE user SET first_name=%s, last_name=%s WHERE email=%s"
             cursor.execute(sql, (first_name, last_name, email))
-        return 'User information updated successfully!', 200  # Return success response
-    return 'Error updating user information', 500  # Return error response
+        return 'User information has been successfully updated!', 200
+    return 'Failed to update user information.', 500
 
 
 if __name__ == '__main__':
